@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geçmişin Borsası</title>
+<style>
+:root{--paper:#f2ebd9;--paper2:#e9dfc6;--ink:#1c2a22;--green:#1f5a3f;--green2:#17402d;--red:#8a2a26;--gold:#b58a2c;--line:#c9bb98;--bg:#173326;--up:#1f6b46;--down:#a8322d}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,'Times New Roman',serif}
+button{font:inherit;cursor:pointer}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+.tape{background:repeating-linear-gradient(90deg,#e8e0c9,#e8e0c9 6px,#e1d8be 6px,#e1d8be 7px);border-bottom:2px solid #b9ad88;overflow:hidden;white-space:nowrap;height:30px;font-size:13px;position:sticky;top:0;z-index:5}
+.tape span{display:inline-block;padding:6px 18px;animation:none}
+.tape .in{display:inline-block;animation:scroll 60s linear infinite}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.up{color:var(--up)}.dn{color:var(--down)}
+.wrap{max-width:1280px;margin:0 auto;padding:14px}
+.paper{background:var(--paper);border:3px double #9c8f68;box-shadow:0 10px 30px #0006;padding:16px 18px}
+h1{font-size:54px;margin:0;color:var(--green2);letter-spacing:1px;text-align:center}
+.sub{text-align:center;color:#5d5a48;font-style:italic;margin:4px 0 14px}
+.stamp{display:inline-block;border:3px solid var(--red);color:var(--red);padding:2px 10px;transform:rotate(-6deg);font-weight:bold;letter-spacing:2px;font-size:13px;opacity:.85}
+.btn{background:var(--green);color:#fff;border:0;padding:9px 16px;border-radius:3px;font-weight:bold;letter-spacing:.5px}
+.btn:hover{background:var(--green2)}.btn:disabled{background:#9aa79f;cursor:not-allowed}
+.btn.alt{background:transparent;color:var(--green2);border:2px solid var(--green2)}
+.btn.alt:hover{background:#0001}
+.btn.red{background:var(--red)}
+input[type=text]{font:inherit;padding:8px 10px;border:2px solid var(--line);background:#fffdf5;border-radius:3px;width:100%}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.topgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.era-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.era{background:#fffdf5;border:2px solid var(--line);padding:10px;text-align:left;border-radius:3px;position:relative;transition:.12s}
+.era:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:0 4px 10px #0002}
+.era .y{font-size:28px;font-weight:bold;color:var(--green2)}
+.era .t{font-weight:bold;font-size:14px}
+.era .d{font-size:12px;color:#5d5a48;margin-top:3px;min-height:30px}
+.tag{position:absolute;top:8px;right:8px;font-size:10px;padding:1px 6px;border-radius:9px;color:#fff;letter-spacing:.5px}
+.tag.k{background:var(--red)}.tag.b{background:var(--green)}.tag.m{background:var(--gold)}
+.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:20;padding:14px}
+.modal.on{display:flex}
+.modal .paper{max-width:520px;width:100%}
+.gamebar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px;color:#e8e0c9}
+.gamebar .btn.alt{color:#e8e0c9;border-color:#e8e0c9}
+.prog{height:8px;background:#0005;border-radius:4px;flex:1;min-width:120px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--gold);transition:.3s}
+.gcols{display:grid;grid-template-columns:300px 1fr 330px;gap:12px;align-items:start}
+.card{background:var(--paper);border:2px solid #9c8f68;padding:12px;box-shadow:0 6px 18px #0005}
+.card h3{margin:0 0 8px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--red)}
+.news{border-left:4px solid var(--red);padding:6px 10px;margin-bottom:8px;background:#fffdf5}
+.news b{font-size:16px;line-height:1.25;display:block}
+.news small{color:#5d5a48}
+.arch{max-height:300px;overflow:auto;font-size:13px}
+.arch div{padding:5px 0;border-bottom:1px dotted var(--line)}
+.arch small{color:var(--red);font-weight:bold}
+table{border-collapse:collapse;width:100%}
+.assets tr{border-bottom:1px dotted var(--line)}
+.assets td{padding:7px 4px;vertical-align:middle}
+.an{font-weight:bold}.ad{font-size:11.5px;color:#5d5a48;line-height:1.2}
+.pos{font-size:13px;text-align:right;white-space:nowrap}
+.tb{display:flex;gap:3px;justify-content:flex-end}
+.tb button{border:1px solid #9c8f68;background:#fffdf5;padding:4px 6px;font-size:12px;border-radius:2px;font-family:ui-monospace,Menlo,monospace}
+.tb button:hover:not(:disabled){background:var(--green);color:#fff}
+.tb button:disabled{opacity:.35;cursor:not-allowed}
+.big{font-size:30px;font-weight:bold;color:var(--green2)}
+.kv{display:flex;justify-content:space-between;font-size:13.5px;padding:2px 0}
+.bar{display:flex;height:14px;border:1px solid #9c8f68;margin:6px 0;background:#fffdf5}
+.bar i{display:block;height:100%}
+.legend{font-size:11.5px;display:flex;flex-wrap:wrap;gap:4px 10px}
+.legend b{display:inline-block;width:9px;height:9px;margin-right:3px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:4px;z-index:50;opacity:0;pointer-events:none;transition:.25s;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+.opp{border:2px dashed var(--gold);padding:10px;background:#fbf4de;margin-top:10px}
+.opp h3{color:var(--gold)}
+.small{font-size:12px;color:#5d5a48}
+.sw{display:flex;align-items:center;gap:6px;font-size:13px}
+.res th,.res td{padding:5px 8px;text-align:right;border-bottom:1px dotted var(--line);font-size:13px}
+.res th:first-child,.res td:first-child{text-align:left}
+.res th{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--red)}
+.ins li{margin:5px 0;line-height:1.35}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:1020px){.gcols{grid-template-columns:1fr}.topgrid,.cols2{grid-template-columns:1fr}h1{font-size:38px}}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="tape"><div class="in" id="tape"></div></div>
+
+<!-- ANA MENÜ -->
+<div id="home" class="wrap">
+  <div class="paper" style="margin-bottom:14px">
+    <div style="text-align:center"><span class="stamp">TARİHİ SİMÜLASYON</span></div>
+    <h1>Geçmişin Borsası</h1>
+    <div class="sub">25 gerçek dönem · her çeyrekte karar ver · haberleri oku · arkadaşınla aynı maça gir</div>
+    <div class="topgrid">
+      <div>
+        <div class="small" style="margin-bottom:4px">Takma adın</div>
+        <input type="text" id="nick" maxlength="16" placeholder="Takma ad">
+      </div>
+      <div>
+        <div class="small" style="margin-bottom:4px">Arkadaşın oda kodu verdiyse buraya yaz</div>
+        <div class="row" style="flex-wrap:nowrap"><input type="text" id="joincode" maxlength="4" placeholder="ABCD" style="text-transform:uppercase"><button class="btn" id="joinbtn">Odaya katıl</button></div>
+      </div>
+    </div>
+    <div class="small" style="line-height:1.5">
+      <b>Nasıl oynanır?</b> Bir dönem seç (başlangıç yılı açık yazar). 10.000 dolarla başlarsın, 5 yıl = 20 çeyrek. Her çeyrek başında o çeyreğin haberi düşer; fiyatlar o çeyrek boyunca bu habere tepki verir. Al/sat, nakitte kal, istersen "uzman modda" kaldıraç ve açığa satış kullan. Komisyon, vergi, enflasyon ve faiz gerçektir. Sonda S&amp;P 500'ü ve enflasyonu yenip yenemediğine bakılır.
+    </div>
+  </div>
+  <div class="paper"><div class="era-grid" id="eragrid"></div>
+    <p class="small" style="margin:12px 0 0">Veri notu: yıllık getiriler yaklaşık gerçek verilerdir (S&amp;P 500 toplam getiri, Nasdaq, Nikkei, altın, petrol, 10 yıllık ABD tahvili, Bitcoin, T-bill, TÜFE). Çeyrek içi yol, yıllık getiriyi tutturan sabit tohumlu simülasyondur; iki oyuncuda da birebir aynıdır.</p>
+  </div>
+</div>
+
+<!-- DÖNEM DETAY / KURULUM -->
+<div class="modal" id="setup"><div class="paper">
+  <div class="row" style="justify-content:space-between"><div><div class="big" id="sYear"></div><div style="font-weight:bold" id="sTitle"></div></div><span class="stamp">BAŞLANGIÇ YILI AÇIK</span></div>
+  <p id="sDesc" style="line-height:1.4"></p>
+  <label class="sw"><input type="checkbox" id="expert"> <span><b>Uzman mod:</b> kaldıraç (3x'e kadar), açığa satış, margin call</span></label>
+  <div class="row" style="margin-top:14px">
+    <button class="btn" id="goSolo">Tek başıma oyna</button>
+    <button class="btn alt" id="goRoom">Arkadaşımla oyna (oda kur)</button>
+    <button class="btn alt" id="goClose">Vazgeç</button>
+  </div>
+  <div id="roomInfo" class="hide" style="margin-top:12px;padding:10px;background:#fffdf5;border:2px dashed var(--gold)">
+    <div>Oda kodun: <b class="mono" style="font-size:26px;letter-spacing:4px" id="roomCode">....</b></div>
+    <div class="small">Arkadaşın siteyi açıp bu kodu "Odaya katıl" kutusuna yazsın. Bağlanınca oyun kendiliğinden başlar.</div>
+  </div>
+</div></div>
+
+<!-- OYUN -->
+<div id="game" class="wrap hide">
+  <div class="gamebar">
+    <button class="btn alt" id="menuBtn">← Menü</button>
+    <div style="font-size:20px;font-weight:bold" id="gTitle"></div>
+    <div class="prog"><i id="gProg"></i></div>
+    <div class="mono" id="gDate"></div>
+    <div id="gBadge" class="small" style="color:#e8e0c9"></div>
+  </div>
+  <div class="gcols">
+    <div>
+      <div class="card"><h3>Haber hattı</h3><div id="newsNow"></div><div class="small" style="margin:8px 0 4px"><b>Arşiv</b></div><div class="arch" id="arch"></div></div>
+    </div>
+    <div class="card"><h3>Piyasa · pozisyonlar</h3><table class="assets"><tbody id="assets"></tbody></table>
+      <div class="small" style="margin-top:8px" id="ruleNote"></div></div>
+    <div>
+      <div class="card">
+        <h3>Portföy</h3>
+        <div class="big mono" id="eq"></div>
+        <div class="kv"><span>Toplam getiri</span><b class="mono" id="ret"></b></div>
+        <div class="kv"><span>Enflasyondan arındırılmış</span><b class="mono" id="rret"></b></div>
+        <div class="kv"><span>S&amp;P 500 (kıyas)</span><b class="mono" id="bret"></b></div>
+        <div class="kv"><span>Nakit</span><b class="mono" id="cash"></b></div>
+        <div class="kv"><span>Ödenen komisyon + vergi</span><b class="mono" id="costs"></b></div>
+        <div class="bar" id="wbar"></div><div class="legend" id="wleg"></div>
+        <svg id="chart" viewBox="0 0 300 120" style="width:100%;margin-top:8px;background:#fffdf5;border:1px solid var(--line)"></svg>
+        <div class="legend" id="cleg"></div>
+        <button class="btn" id="nextBtn" style="width:100%;margin-top:10px;padding:12px">ÇEYREĞİ BİTİR →</button>
+        <div class="small" id="waitNote" style="margin-top:6px"></div>
+      </div>
+      <div class="opp hide" id="oppBox"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SONUÇ -->
+<div id="end" class="wrap hide"><div class="paper" id="endBody"></div></div>
+
+<div class="toast" id="toast"></div>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+/* ============ VERİ ============ */
+// 1973'ten itibaren yıllık getiri (%). Kaynak: yaklaşık gerçek piyasa verileri.
+const Y0=1973;
+const R={
+sp:[-14.7,-26.5,37.2,23.8,-7.2,6.6,18.4,32.4,-4.9,21.4, 22.5,6.3,32.2,18.5,5.2,16.8,31.5,-3.1,30.5,7.6, 10.1,1.3,37.6,23,33.4,28.6,21,-9.1,-11.9,-22.1, 28.7,10.9,4.9,15.8,5.5,-37,26.5,15.1,2.1,16, 32.4,13.7,1.4,12,21.8,-4.4,31.5,18.4,28.7,-18.1, 26.3,25],
+nq:[-31.1,-35.1,29.8,26.1,7.3,12.3,28.1,33.9,-3.2,18.7, 19.9,-11.2,31.4,7.4,-5.3,15.4,19.3,-17.8,56.8,15.5, 14.7,-3.2,39.9,22.7,21.6,39.6,85.6,-39.3,-21.1,-31.5, 50,8.6,1.4,9.5,9.8,-40.5,43.9,16.9,-1.8,15.9, 38.3,13.4,5.7,7.5,28.2,-3.9,35.2,43.6,21.4,-33.1, 43.4,28.6],
+nk:[-17,-11,11,15,4,20,6,7,10,4, 23,17,13,43,14,40,29,-39,-4,-26, 3,13,1,-3,-21,-9,37,-27,-23,-19, 24,8,41,7,-11,-42,19,-3,-17,23, 57,7,9,0.4,19,-12,18,16,5,-9, 28,19],
+au:[73,66,-25,-4,21,30,127,15,-32,15, -16,-19,6,20,24,-15,-2,-3,-9,-6, 18,-2,1,-5,-22,-1,1,-5,1,25, 19,5,18,23,31,5,24,29,10,7, -28,-2,-10,8,13,-2,18,25,-4,0, 13,27],
+oil:[90,12,5,6,8,2,110,40,-5,-10, -5,-3,-5,-50,30,-8,20,33,-30,-1, -17,21,13,33,-32,-32,113,4,-26,58, 4,34,41,0,57,-54,77,16,8,-7, 7,-46,-30,45,12,-25,35,-21,55,7, -11,0],
+bd:[2,4,9,16,1,-1,0,-3,8,33, 3,14,26,24,-3,8,18,6,17,8, 14,-8,23,0,10,13,-9,17,6,15, 2,5,3,2,10,20,-11,8,17,3, -9,11,1,1,2,0,9,11,-4,-17, 4,-1],
+cash:[7,8,5.8,5,5.3,7.2,10,11.2,14.7,10.5, 8.8,9.9,7.7,6.2,5.5,6.4,8.4,7.8,5.6,3.5, 2.9,3.9,5.6,5.2,5.3,4.9,4.7,6,3.8,1.6, 1,1.2,3,4.7,4.5,1.4,0.2,0.1,0.05,0.1, 0.05,0.03,0.05,0.3,0.9,1.9,2.1,0.5,0.05,1.5, 5.1,5],
+cpi:[8.7,12.3,6.9,4.9,6.7,9,13.3,12.5,8.9,3.8, 3.8,3.9,3.8,1.1,4.4,4.4,4.6,6.1,3.1,2.9, 2.7,2.7,2.5,3.3,1.7,1.6,2.7,3.4,1.6,2.4, 1.9,3.3,3.4,2.5,4.1,0.1,2.7,1.5,3,1.7, 1.5,0.8,0.7,2.1,2.1,1.9,2.3,1.4,7,6.5, 3.4,2.9],
+btc:[5500,-58,35,125,1300,-73,95,300,60,-64,155,120] // 2013'ten
+};
+for(const k in R){const need=k==='btc'?12:52;if(R[k].length!==need)console.error('Veri uzunluğu hatalı',k,R[k].length)}
+const BTC0=2013;
+const val=(a,y)=>a==='btc'?(y<BTC0?null:R.btc[y-BTC0]/100):(y<Y0||y>2024?null:R[a][y-Y0]/100);
+
+const ASSETS={
+ sp:{n:'S&P 500',d:'ABD\'nin 500 büyük şirketi, temettüler dahil.',vol:.07,fee:.002,col:'#1f5a3f'},
+ nq:{n:'Nasdaq',d:'Teknoloji ağırlıklı ABD borsası. Hızlı yükselir, sert düşer.',vol:.11,fee:.003,col:'#2a6fa8'},
+ nk:{n:'Nikkei 225',d:'Japon borsası (yen cinsinden).',vol:.10,fee:.004,col:'#b04a7a'},
+ au:{n:'Altın',d:'Kriz ve enflasyon sığınağı. Faiz getirmez.',vol:.07,fee:.003,col:'#b58a2c'},
+ oil:{n:'Ham petrol',d:'Savaş, OPEC ve talebe çok duyarlı.',vol:.13,fee:.004,col:'#444'},
+ bd:{n:'ABD 10 yıllık tahvil',d:'Faiz düşerse kazanır, faiz artarsa kaybeder.',vol:.03,fee:.001,col:'#6a5acd'},
+ btc:{n:'Bitcoin',d:'Dijital varlık. Aşırı oynak.',vol:.30,fee:.01,col:'#e07b00'}
+};
+
+// Olaylar: [yıl, çeyrek(1-4), başlık, {şok: log-% puan}]
+const EV=[
+[1973,1,'Bretton Woods çöktü: dolar artık altına bağlı değil, kurlar dalgalanıyor.'],
+[1973,2,'Watergate duruşmaları televizyondan yayınlanıyor; siyasi belirsizlik artıyor.'],
+[1973,4,'OPEC petrol ambargosu ilan etti: benzin istasyonlarında kuyruklar.',{oil:30,sp:-6,nq:-6}],
+[1974,3,'Başkan Nixon istifa etti.'],
+[1974,4,'Enflasyon %12\'yi aştı; borsa on yılların en kötü yılını yaşıyor.'],
+[1975,2,'Vietnam Savaşı sona erdi, Saygon düştü.'],
+[1975,4,'New York şehri iflasın eşiğinde; federal yardım reddedildi.'],
+[1976,4,'Jimmy Carter başkan seçildi.'],
+[1977,4,'Dolar zayıflıyor, altın tırmanışa geçti.'],
+[1978,4,'Fed faizi artırıyor; enflasyon %9 civarında.'],
+[1979,1,'İran Devrimi: Şah ülkeyi terk etti, petrol arzı daralıyor.',{oil:20}],
+[1979,4,'Fed Başkanı Volcker sert para sıkılaştırması açıkladı; Tahran\'da ABD büyükelçiliğinde rehine krizi.',{au:25}],
+[1980,1,'Altın 850 dolarla rekor kırdı; ardından sert düşüş geldi. Prime faiz %20\'ye gidiyor.'],
+[1980,4,'Ronald Reagan başkan seçildi.'],
+[1981,3,'Reagan vergi indirimini imzaladı; hava trafik kontrolörleri greve gitti.'],
+[1981,4,'ABD resesyona girdi; işsizlik yükseliyor.'],
+[1982,3,'Meksika borç ödeyemeyeceğini açıkladı; Fed faiz indirmeye başladı. Borsa dipten döndü.'],
+[1983,2,'Ekonomi güçlü toparlanıyor; teknoloji hisseleri hızlanıyor.'],
+[1984,2,'Continental Illinois bankası kurtarıldı: "çökemeyecek kadar büyük" tartışması.'],
+[1985,3,'Plaza Anlaşması: büyük ekonomiler doları aşağı çekmek için anlaştı.'],
+[1986,1,'Suudi Arabistan petrol musluğunu açtı: varil fiyatı yarıya iniyor. Challenger uzay mekiği kazası.',{oil:-30}],
+[1987,4,'KARA PAZARTESİ: Dow Jones tek günde %22,6 çöktü.',{sp:-18,nq:-20,nk:-10}],
+[1988,4,'George H. W. Bush başkan seçildi.'],
+[1989,4,'Berlin Duvarı yıkıldı. Nikkei 38.915 ile tarihi zirvede.'],
+[1990,1,'Japon borsası ve emlak balonu çöküyor.'],
+[1990,3,'Irak Kuveyt\'i işgal etti; petrol fırladı, borsalar düştü.',{oil:35,sp:-10,nk:-10}],
+[1991,1,'Çöl Fırtınası: koalisyon güçleri Irak\'a saldırdı; petrol sert düştü, borsa yükseldi.',{oil:-30,sp:6}],
+[1991,4,'Sovyetler Birliği resmen dağıldı.'],
+[1992,3,'Soros İngiliz sterlinine karşı bahse girdi, İngiltere ERM\'den çıktı (Kara Çarşamba).'],
+[1993,1,'Bill Clinton göreve başladı; bütçe açığı gündemde.'],
+[1994,1,'Fed sürpriz faiz artırımı yaptı: tahvil piyasasında "katliam".',{bd:-5}],
+[1994,4,'Meksika peso krizi (Tekila Krizi).'],
+[1995,3,'Netscape halka arz oldu: internet çağı başlıyor.'],
+[1996,4,'Greenspan "irrasyonel coşku" uyarısı yaptı.'],
+[1997,3,'Tayland bahtı çöktü; Asya krizi başladı.'],
+[1997,4,'Güney Kore IMF\'ye gitti; Dow bir günde 554 puan düştü.',{nk:-8}],
+[1998,3,'Rusya borç ödemesini durdurdu, LTCM fonu çöktü.',{sp:-12,nq:-15}],
+[1998,4,'Fed faiz indirdi; internet hisselerinde rallisi başladı.'],
+[1999,4,'Y2K endişesi; Nasdaq yıl sonunda 4.000\'i aştı.'],
+[2000,1,'Nasdaq 5.000\'i aştı (10 Mart zirvesi). Sonra satış başladı.'],
+[2000,2,'Microsoft\'un bölünmesine mahkeme kararı; teknoloji sert satılıyor.',{nq:-12}],
+[2000,4,'Bush-Gore seçiminde oy sayımı krizi.'],
+[2001,1,'Dot-com iflasları hızlandı; Fed sürpriz faiz indirdi.'],
+[2001,3,'11 Eylül saldırıları: borsalar 4 gün kapandı, açılışta sert düştü.',{sp:-12,nq:-18}],
+[2001,4,'Enron iflas başvurusu yaptı.'],
+[2002,2,'WorldCom muhasebe skandalı; güven sarsıldı.'],
+[2002,4,'Borsa 2002 dibine yakın; Irak savaşı ihtimali konuşuluyor.'],
+[2003,1,'ABD Irak\'ı işgal etti.'],
+[2003,2,'Fed faizi %1\'e indirdi; borsa yükselişe geçti.'],
+[2004,4,'Petrol 50 doları aştı.'],
+[2005,3,'Katrina kasırgası; petrol 70 dolara dayandı.'],
+[2006,2,'ABD konut fiyatları zirve yapıp yavaşlıyor.'],
+[2007,1,'Subprime ipotek kredilerinde temerrütler artıyor.'],
+[2007,3,'BNP Paribas fonlarını dondurdu; Northern Rock\'ta bankacılık paniği.'],
+[2007,4,'Petrol 100 dolara yaklaştı; kredi piyasaları kilitleniyor.'],
+[2008,1,'Bear Stearns zorunlu satışla kurtarıldı.'],
+[2008,3,'Lehman Brothers iflas etti; AIG kurtarıldı.'],
+[2008,4,'Küresel panik: borsalar çöküyor, petrol yarıdan fazla düştü.',{sp:-14,nq:-15,nk:-15,oil:-35}],
+[2009,1,'Borsa 9 Mart\'ta 12 yılın dibini gördü; Fed nicel genişlemeyi (QE) genişletti.',{sp:-8}],
+[2009,4,'Yunanistan\'ın gizlenmiş açıkları ortaya çıktı.'],
+[2010,2,'Yunanistan kurtarma paketi; 6 Mayıs "Flash Crash".'],
+[2011,3,'ABD kredi notu AAA\'dan düşürüldü; altın rekor kırdı.',{sp:-12,au:12}],
+[2011,4,'Euro bölgesi borç krizi büyüyor.'],
+[2012,3,'Draghi: "Euroyu korumak için ne gerekirse yapacağız."'],
+[2013,2,'Bernanke tahvil alımlarını azaltma sinyali verdi (taper tantrum).'],
+[2013,4,'Bitcoin ilk kez 1.000 doları aştı.'],
+[2014,4,'OPEC üretimi kısmayacak: petrol çöküşü başladı.',{oil:-35}],
+[2015,3,'Çin yuanı devalüe etti; Çin borsası çöktü.',{sp:-8}],
+[2015,4,'Fed 9 yıl sonra ilk faiz artırımını yaptı.'],
+[2016,2,'Brexit referandumu: İngiltere AB\'den ayrılma kararı verdi.'],
+[2016,4,'Donald Trump seçildi; borsa rekora koştu.'],
+[2017,4,'ABD vergi reformu; Bitcoin 20.000 dolara yaklaştı.'],
+[2018,1,'Volatilite patlaması; Trump çelik ve alüminyum tarifelerini açıkladı.'],
+[2018,4,'Fed faiz artırımı sürdürdü; Aralık\'ta sert düşüş.',{sp:-12,nq:-14}],
+[2019,3,'Tahvil getiri eğrisi ters döndü: resesyon sinyali.'],
+[2020,1,'Covid-19 pandemisi: borsa 33 günde yaklaşık %34 çöktü.',{sp:-22,nq:-18,nk:-15,oil:-45}],
+[2020,2,'Petrol vadelileri bir an için negatife düştü; Fed sınırsız likidite verdi.'],
+[2020,4,'Pfizer aşı sonuçlarını açıkladı; borsa rekor kırdı.'],
+[2021,1,'GameStop: Reddit\'teki bireysel yatırımcılar hedge fonları sıkıştırdı.'],
+[2021,4,'Enflasyon %7\'ye çıktı; Fed "geçici" demeyi bıraktı.'],
+[2022,1,'Rusya Ukrayna\'yı işgal etti; petrol ve emtia fırladı.'],
+[2022,2,'Fed 75 baz puan faiz artırdı; teknoloji hisseleri çöktü.',{sp:-10,nq:-15}],
+[2022,4,'FTX iflas etti; kripto sert düştü.',{btc:-20}],
+[2023,1,'Silicon Valley Bank çöktü; bankacılık paniği.'],
+[2023,4,'Yapay zekâ rallisi: Nvidia öncülüğünde teknoloji yükselişte.'],
+[2024,3,'Fed faiz indirimlerine başladı.'],
+[2024,4,'Trump yeniden seçildi; Bitcoin 100.000 doları aştı.']
+];
+const EVMAP={};EV.forEach(e=>{(EVMAP[e[0]+'Q'+e[1]]=EVMAP[e[0]+'Q'+e[1]]||[]).push(e)});
+
+const ERAS=[
+[1973,'Petrol Şoku','k','OPEC ambargosu, Watergate, Bretton Woods sonrası kaos.'],
+[1976,'Stagflasyon','m','Yüksek enflasyon, zayıf büyüme; altın yükselişte.'],
+[1979,'Volcker Şoku','k','Faizler %20\'ye çıkıyor, altın uçup çöküyor.'],
+[1980,'Reagan Dönemi','m','Faiz tavan, resesyon, sonra büyük boğa başlangıcı.'],
+[1982,'Büyük Boğa Başlıyor','b','Fed dönüşü; tahvil ve hisse yıllarca yükselecek.'],
+[1985,'Plaza Anlaşması','b','Dolar düşerken Japonya\'da balon büyüyor.'],
+[1987,'Kara Pazartesi','k','Tek günde %22 çöküş. Dip mi, fırsat mı?'],
+[1989,'Duvar Yıkıldı','m','Berlin Duvarı, Nikkei zirvesi ve çöküşü, Körfez Savaşı.'],
+[1991,'Soğuk Savaş Sonrası','b','SSCB dağıldı, ABD uzun bir büyümeye giriyor.'],
+[1994,'Tahvil Katliamı','m','Fed sürpriz artırım yaptı; Tekila krizi ve sonra teknoloji dalgası.'],
+[1996,'İnternet Çağı','b','Netscape sonrası coşku, Asya krizi gölgesi.'],
+[1997,'Asya Krizi','k','Bahtın çöküşü, Rusya temerrüdü, LTCM.'],
+[1999,'Dot-com Zirvesi','m','Nasdaq +%85. Balon mu, yeni ekonomi mi?'],
+[2000,'Balon Patlıyor','k','Teknoloji çöküyor, 11 Eylül, Enron.'],
+[2002,'Dip ve Toparlanma','b','Üç yıllık düşüşün sonu; Irak savaşı.'],
+[2003,'Irak ve Boğa','b','Faiz %1, emtia ve borsa yükseliyor.'],
+[2005,'Emlak Balonu','m','Petrol 70$, konut zirvede; fırtına öncesi.'],
+[2007,'Kriz Öncesi Son Yıl','k','Subprime çatlıyor; sezgiler çöküşü gösteriyor mu?'],
+[2008,'Büyük Çöküş','k','Lehman, panik, ve 2009 dibi sonrası dev toparlanma.'],
+[2009,'Sıfır Faiz Dönemi','b','QE başlıyor; borsa 12 yılın dibinden dönüyor.'],
+[2011,'Euro Krizi','m','ABD notu düştü, Draghi "ne gerekirse".'],
+[2013,'Taper ve Bitcoin','b','Tahvil sallanıyor, Bitcoin ilk kez 1000$.'],
+[2015,'Petrol Çöküşü','m','Petrol -%70, Çin şoku, Brexit, Trump.'],
+[2018,'Ticaret Savaşı','m','Tarifeler, Aralık düşüşü, sonra pandemi.'],
+[2020,'Covid Şoku','k','33 günde çöküş, sınırsız para, aşı rallisi, enflasyon.']
+];
+
+/* ============ YARDIMCILAR ============ */
+const $=id=>document.getElementById(id);
+const fmt=n=>(n<0?'-':'')+'$'+Math.abs(n).toLocaleString('en-US',{maximumFractionDigits:0});
+const pct=(x,d=1)=>(x>=0?'+':'')+(x*100).toFixed(d)+'%';
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2600)}
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(r){let u=0,v=0;while(!u)u=r();v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const LS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* ============ FİYAT YOLU ============ */
+function buildEra(start){
+  const hasBtc=start>=BTC0;
+  const keys=['sp','nq','nk','au','oil','bd'].concat(hasBtc?['btc']:[]);
+  const prev=(start-1>=Y0&&(!hasBtc||start-1>=BTC0));
+  const y0=prev?start-1:start, off=prev?4:0, last=start+4;
+  const P={};
+  keys.forEach(a=>{
+    const arr=[100];
+    for(let y=y0;y<=last;y++){
+      const r=val(a,y), tot=Math.log(1+r), rng=mulberry(hash(a+y));
+      let q=[0,0,0,0].map(()=>gauss(rng)*ASSETS[a].vol);
+      const m=q.reduce((s,x)=>s+x,0)/4; q=q.map(x=>x-m+tot/4);
+      for(let i=1;i<=4;i++){
+        (EVMAP[y+'Q'+i]||[]).forEach(e=>{const sh=e[3]&&e[3][a];if(sh){const s=Math.log(1+sh/100);q=q.map((x,j)=>j===i-1?x+s:x-s/3)}});
+      }
+      q.forEach(x=>arr.push(arr[arr.length-1]*Math.exp(x)));
+    }
+    P[a]=arr;
+  });
+  return {keys,P,off,y0};
+}
+
+/* ============ OYUN DURUMU ============ */
+let G=null, NET={on:false,role:null,conn:null,peer:null,opp:null,code:null}, PENDING=null;
+
+function newGame(start,expert,seedNet){
+  const E=buildEra(start);
+  G={start,expert,E,step:0,cash:10000,units:{},avg:{},fees:0,tax:0,taxG:0,taxPaid:0,
+     snaps:[],trades:[],readyStep:-1,infl:[1],done:false,bust:false,log:[]};
+  E.keys.forEach(a=>{G.units[a]=0;G.avg[a]=0});
+  G.snaps.push({eq:10000,w:{},cash:1});
+  G.eqHist=[10000];
+}
+const px=(a,s=G.step)=>G.E.P[a][G.E.off+s];
+function posVal(a){return G.units[a]*px(a)}
+function equity(){let e=G.cash;G.E.keys.forEach(a=>e+=posVal(a));return e}
+function gross(){let g=0;G.E.keys.forEach(a=>g+=Math.abs(posVal(a)));return g}
+const yearOf=s=>G.start+Math.floor(s/4), qOf=s=>s%4+1;
+
+function trade(a,pctEq){
+  if(G.done||G.readyStep===G.step)return;
+  const eq=equity(), p=px(a);
+  let d=pctEq==='close'?-posVal(a):pctEq*eq;
+  if(!d)return;
+  const fee=ASSETS[a].fee;
+  if(!G.expert){
+    if(d>0){const maxBuy=Math.max(0,G.cash/(1+fee));if(d>maxBuy)d=maxBuy;if(d<1){toast('Yeterli nakit yok. Önce başka bir şeyi sat.');return}}
+    else{const have=Math.max(0,posVal(a));if(-d>have)d=-have;if(d>-1){toast('Satacak pozisyon yok. Açığa satış uzman modda.');return}}
+  }else{
+    // kaldıraç limiti: toplam pozisyon <= 3x özsermaye
+    const before=gross(), after=before-Math.abs(posVal(a))+Math.abs(posVal(a)+d);
+    if(after>eq*3+1&&Math.abs(posVal(a)+d)>Math.abs(posVal(a))){toast('Kaldıraç limiti (3x) aşılıyor.');return}
+  }
+  const q=d/p, u=G.units[a];
+  // gerçekleşen kâr
+  if(u!==0&&Math.sign(q)!==Math.sign(u)){
+    const closeQ=Math.min(Math.abs(q),Math.abs(u));
+    G.taxG+=closeQ*Math.sign(u)*(p-G.avg[a]);
+  }
+  const nu=u+q;
+  if(u===0||Math.sign(nu)!==Math.sign(u))G.avg[a]=p;
+  else if(Math.abs(nu)>Math.abs(u))G.avg[a]=(Math.abs(u)*G.avg[a]+Math.abs(q)*p)/Math.abs(nu);
+  G.units[a]=Math.abs(nu*p)<0.5?0:nu;
+  const cost=Math.abs(d)*fee;
+  G.cash-=d+cost; G.fees+=cost;
+  const target=0.2*Math.max(0,G.taxG), pay=target-G.taxPaid;
+  if(pay>0){G.cash-=pay;G.taxPaid+=pay;G.tax+=pay}
+  G.trades.push({step:G.step,a,d});
+  G.snaps[G.step]=snap();
+  sendState();render();
+}
+function snap(){
+  const eq=equity(), w={};
+  G.E.keys.forEach(a=>{if(G.units[a])w[a]=posVal(a)/eq});
+  return {eq,w,cash:G.cash/eq};
+}
+
+function advance(){
+  // faiz & borç maliyeti
+  const y=yearOf(G.step), rc=val('cash',y);
+  if(G.cash>0)G.cash*=Math.pow(1+rc,.25); else G.cash*=Math.pow(1+rc+.02,.25);
+  G.E.keys.forEach(a=>{if(G.units[a]<0)G.cash-=Math.abs(posVal(a))*.015/4});
+  G.infl.push(G.infl[G.infl.length-1]*Math.pow(1+val('cpi',y),.25));
+  G.step++;
+  let eq=equity();
+  // margin call
+  if(G.expert&&(eq<=0||gross()>eq*5)){
+    let g=gross();G.E.keys.forEach(a=>{G.cash-=Math.abs(posVal(a))*ASSETS[a].fee;G.cash+=posVal(a);G.units[a]=0});
+    G.log.push({step:G.step,t:'MARGIN CALL: tüm pozisyonların zorla kapatıldı.'});
+    toast('MARGIN CALL! Pozisyonların zorla kapatıldı.');
+    eq=equity();
+  }
+  if(eq<=0){G.bust=true;G.cash=Math.max(eq,0);G.units={};G.E.keys.forEach(a=>G.units[a]=0)}
+  G.snaps[G.step]=snap();
+  G.eqHist.push(Math.max(eq,0));
+  G.readyStep=-1;
+  if(G.step>=20){G.done=true;sendState();setTimeout(showEnd,600);return}
+  sendState();render();
+}
+
+function onNext(){
+  if(G.done)return;
+  G.readyStep=G.step;
+  sendState();
+  tryAdvance();
+  render();
+}
+function tryAdvance(){
+  if(!G||G.done||G.readyStep!==G.step)return;
+  if(!NET.on){advance();return}
+  const o=NET.opp;
+  if(o&&o.readyStep===G.step&&o.step===G.step)advance();
+}
+
+/* ============ ÇİZİM ============ */
+function render(){
+  if(!G)return;
+  const y=yearOf(Math.min(G.step,19)), q=qOf(Math.min(G.step,19));
+  $('gTitle').textContent=G.start+' · '+(ERAS.find(e=>e[0]===G.start)||[0,''])[1];
+  $('gDate').textContent=G.done?'BİTTİ':(y+' · '+q+'. çeyrek');
+  $('gProg').style.width=(G.step/20*100)+'%';
+  $('gBadge').textContent=(G.expert?'UZMAN MOD':'Klasik mod')+(NET.on?' · 2 kişilik':'')+(NET.code&&NET.role==='host'?' · oda '+NET.code:'');
+  // haber
+  const evs=EVMAP[y+'Q'+q]||[];
+  $('newsNow').innerHTML=evs.length?evs.map(e=>`<div class="news"><small>${y} · ${q}. çeyrek</small><b>${e[2]}</b></div>`).join(''):`<div class="news"><small>${y} · ${q}. çeyrek</small><b>Bu çeyrekte öne çıkan büyük bir haber yok. Piyasa kendi yolunda.</b></div>`;
+  let arch='';
+  for(let s=G.step-1;s>=0;s--){const yy=yearOf(s),qq=qOf(s);(EVMAP[yy+'Q'+qq]||[]).forEach(e=>{arch+=`<div><small>${yy} Ç${qq}</small> ${e[2]}</div>`})}
+  $('arch').innerHTML=arch||'<div class="small">Henüz arşiv yok.</div>';
+  // varlıklar
+  const eq=equity();
+  let rows='';
+  G.E.keys.forEach(a=>{
+    const i=G.E.off+G.step, p=G.E.P[a];
+    const tr=i>=4?p[i]/p[i-4]-1:null;
+    const v=posVal(a), w=v/eq, locked=G.readyStep===G.step||G.done;
+    const hist=p.slice(Math.max(0,i-12),i+1), mn=Math.min(...hist), mx=Math.max(...hist);
+    const pts=hist.map((x,j)=>`${(j/(Math.max(hist.length-1,1))*60).toFixed(1)},${(22-(x-mn)/((mx-mn)||1)*20).toFixed(1)}`).join(' ');
+    const lastUp=hist[hist.length-1]>=hist[0];
+    const dis=locked?'disabled':'';
+    rows+=`<tr><td style="width:34%"><div class="an"><span style="color:${ASSETS[a].col}">■</span> ${ASSETS[a].n}</div><div class="ad">${ASSETS[a].d}</div></td>
+    <td style="width:76px"><svg viewBox="0 0 60 24" width="64" height="26"><polyline points="${pts}" fill="none" stroke="${lastUp?'#1f6b46':'#a8322d'}" stroke-width="1.6"/></svg><div class="small mono">${tr==null?'—':'12a '+pct(tr,0)}</div></td>
+    <td class="pos mono"><b>${fmt(v)}</b><div class="small">%${(w*100).toFixed(0)}${v<0?' (açık satış)':''}</div></td>
+    <td><div class="tb"><button ${dis} data-a="${a}" data-p="-0.25">-25</button><button ${dis} data-a="${a}" data-p="-0.1">-10</button><button ${dis} data-a="${a}" data-p="0.1">+10</button><button ${dis} data-a="${a}" data-p="0.25">+25</button><button ${dis} data-a="${a}" data-p="close">✕</button></div></td></tr>`;
+  });
+  const cashRate=val('cash',y);
+  rows+=`<tr><td><div class="an">■ Nakit</div><div class="ad">Yıllık yaklaşık %${(cashRate*100).toFixed(1)} faiz. Düşmez ama enflasyon eritir.</div></td><td></td><td class="pos mono"><b>${fmt(G.cash)}</b><div class="small">%${(G.cash/eq*100).toFixed(0)}</div></td><td class="small" style="text-align:right">${G.cash<0?'Borç: faiz +%2':''}</td></tr>`;
+  $('assets').innerHTML=rows;
+  $('ruleNote').innerHTML=`Butonlar özsermayenin yüzdesi kadar al/sat yapar (+10 = %10 al). Komisyon %0,1 – 1; kâr üzerinden %20 vergi kesilir. ${G.expert?'Uzman mod: eksiye düşersen açığa satış, nakit eksiye düşerse kaldıraç olur (en fazla 3x).':'Klasik mod: sadece nakitle al, açığa satış yok.'}`;
+  // portföy
+  const ret=eq/10000-1, infl=G.infl[G.infl.length-1], rret=(eq/10000)/infl-1, b=px('sp')/100-1;
+  $('eq').textContent=fmt(eq);
+  const sty=(el,v)=>{$(el).textContent=pct(v);$(el).className='mono '+(v>=0?'up':'dn')};
+  sty('ret',ret);sty('rret',rret);sty('bret',b);
+  $('cash').textContent=fmt(G.cash);$('costs').textContent=fmt(G.fees+G.tax);
+  // bar
+  const parts=[];G.E.keys.forEach(a=>{const v=posVal(a);if(v>0)parts.push([a,v])});
+  const tot=parts.reduce((s,x)=>s+x[1],0)+Math.max(G.cash,0)||1;
+  $('wbar').innerHTML=parts.map(([a,v])=>`<i style="width:${v/tot*100}%;background:${ASSETS[a].col}" title="${ASSETS[a].n}"></i>`).join('')+`<i style="width:${Math.max(G.cash,0)/tot*100}%;background:#c9bb98"></i>`;
+  $('wleg').innerHTML=parts.map(([a])=>`<span><b style="background:${ASSETS[a].col}"></b>${ASSETS[a].n}</span>`).join('')+'<span><b style="background:#c9bb98"></b>Nakit</span>';
+  drawChart('chart',G.eqHist,NET.opp&&NET.opp.snaps?NET.opp.snaps.map(s=>s&&s.eq):null);
+  $('cleg').innerHTML='<span><b style="background:#1f5a3f"></b>Sen</span><span><b style="background:#b04a7a"></b>Rakip</span><span><b style="background:#999"></b>S&P 500</span>';
+  // ileri butonu
+  const nb=$('nextBtn');
+  if(G.done){nb.disabled=true;nb.textContent='Bitti'}
+  else if(G.readyStep===G.step){nb.disabled=true;nb.textContent='Hazırsın · bekleniyor…'}
+  else{nb.disabled=false;nb.textContent=G.step===19?'SON ÇEYREĞİ BİTİR →':'ÇEYREĞİ BİTİR →'}
+  $('waitNote').textContent=NET.on?(G.readyStep===G.step?'Arkadaşının hazır olması bekleniyor. Her çeyrek ikiniz de "bitir" deyince ilerler.':'İkiniz de çeyreği bitirince ilerler. Arkadaşının hamlelerini sağdan canlı görürsün.'):'';
+  renderOpp();
+}
+function drawChart(id,mine,opp){
+  const svg=$(id), W=300,H=120;
+  const bench=[];for(let s=0;s<=G.step;s++)bench.push(10000*px('sp',s)/100);
+  const all=[...mine,...bench,...(opp||[]).filter(x=>x)];
+  const mn=Math.min(...all)*.97,mx=Math.max(...all)*1.03;
+  const line=(arr,c,wd)=>{const pts=arr.map((v,i)=>v==null?null:`${(i/20*(W-10)+5).toFixed(1)},${(H-8-(v-mn)/((mx-mn)||1)*(H-16)).toFixed(1)}`).filter(Boolean).join(' ');return `<polyline points="${pts}" fill="none" stroke="${c}" stroke-width="${wd}"/>`};
+  const base=H-8-(10000-mn)/((mx-mn)||1)*(H-16);
+  svg.innerHTML=`<line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="#c9bb98" stroke-dasharray="3 3"/>`+line(bench,'#999',1.5)+(opp?line(opp,'#b04a7a',2):'')+line(mine,'#1f5a3f',2.4);
+}
+function renderOpp(){
+  const box=$('oppBox');
+  if(!NET.on||!NET.opp){box.classList.add('hide');return}
+  const o=NET.opp, r=o.eq/10000-1;
+  box.classList.remove('hide');
+  const ws=Object.entries(o.w||{}).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).map(([a,x])=>`${ASSETS[a]?ASSETS[a].n:a} %${(x*100).toFixed(0)}`).join(' · ')||'tamamen nakit';
+  const my=equity();
+  const lt=(o.trades||[]).filter(t=>t.step===o.step).map(t=>`${ASSETS[t.a].n} ${t.d>0?'AL':'SAT'} ${fmt(Math.abs(t.d))}`).join(', ');
+  box.innerHTML=`<h3>Arkadaşın · ${esc(o.name||'Rakip')}</h3>
+   <div class="kv"><span>Portföy</span><b class="mono">${fmt(o.eq)} <span class="${r>=0?'up':'dn'}">${pct(r)}</span></b></div>
+   <div class="kv"><span>Fark (sen − o)</span><b class="mono ${my-o.eq>=0?'up':'dn'}">${fmt(my-o.eq)}</b></div>
+   <div class="small" style="margin-top:4px"><b>Pozisyonları:</b> ${ws}, nakit %${((o.cash||0)*100).toFixed(0)}</div>
+   <div class="small" style="margin-top:4px"><b>Bu çeyrek hamleleri:</b> ${lt||'henüz yok'}</div>
+   <div class="small" style="margin-top:4px">${o.readyStep===G.step?'✅ Çeyreği bitirdi, seni bekliyor':'⏳ Düşünüyor…'}</div>`;
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ============ SONUÇ ============ */
+function stats(snaps,fees,tr){
+  const eqs=snaps.map(s=>s.eq);let peak=0,dd=0;eqs.forEach(e=>{peak=Math.max(peak,e);dd=Math.min(dd,e/peak-1)});
+  return {end:eqs[eqs.length-1],dd,fees,n:tr};
+}
+function showEnd(){
+  $('game').classList.add('hide');$('end').classList.remove('hide');
+  const me=stats(G.snaps,G.fees+G.tax,G.trades.length);
+  const bench=px('sp',20)/100*10000, infl=G.infl[G.infl.length-1];
+  const o=NET.on&&NET.opp&&NET.opp.snaps&&NET.opp.snaps.length>=21?NET.opp:null;
+  const os=o?stats(o.snaps,o.fees||0,(o.trades||[]).length):null;
+  const row=(l,a,b)=>`<tr><td>${l}</td><td>${a}</td>${o?`<td>${b}</td>`:''}</tr>`;
+  const spD=G.eqHist[20]-bench;
+  // çeyrek analizleri
+  const qd=[];for(let s=0;s<20;s++){const a=G.snaps[s].eq,b=G.snaps[s+1].eq,bm=px('sp',s+1)/px('sp',s);qd.push({s,r:b/a-1,rel:b/a-bm})}
+  const best=[...qd].sort((x,y)=>y.r-x.r)[0], worst=[...qd].sort((x,y)=>x.r-y.r)[0];
+  const topPos=sn=>{const e=Object.entries(sn.w||{}).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0];return e?`${ASSETS[e[0]].n} %${(e[1]*100).toFixed(0)}`:'nakit'};
+  const news=s=>(EVMAP[yearOf(s)+'Q'+qOf(s)]||[]).map(e=>e[2]).join(' / ')||'Büyük haber yok';
+  const ins=[];
+  ins.push(`S&P 500 sadece tutulsaydı <b>${fmt(bench)}</b> olurdu. Sen <b>${fmt(G.eqHist[20])}</b> ile ${spD>=0?'<span class="up">onu '+fmt(spD)+' farkla yendin</span>':'<span class="dn">onun '+fmt(-spD)+' gerisinde kaldın</span>'}.`);
+  ins.push(`Enflasyon beş yılda paranın alım gücünü <b>${((1-1/infl)*100).toFixed(0)}%</b> erittiği için gerçek (reel) getirin <b>${pct(G.eqHist[20]/10000/infl-1)}</b>.`);
+  ins.push(`En iyi çeyreğin ${yearOf(best.s)} Ç${qOf(best.s)} (${pct(best.r)}); elinde ${topPos(G.snaps[best.s])} vardı. Haber: ${news(best.s)}`);
+  ins.push(`En kötü çeyreğin ${yearOf(worst.s)} Ç${qOf(worst.s)} (${pct(worst.r)}); elinde ${topPos(G.snaps[worst.s])} vardı. Haber: ${news(worst.s)}`);
+  ins.push(`Toplam <b>${G.trades.length}</b> işlem yaptın ve komisyon + vergi olarak <b>${fmt(G.fees+G.tax)}</b> ödedin. Çok işlem çoğu zaman getiriyi yer.`);
+  if(G.bust)ins.push('<b class="dn">Portföyün sıfırlandı: kaldıraç seni batırdı.</b>');
+  let duel='';
+  if(o){
+    const gaps=[];for(let s=1;s<=20;s++)gaps.push({s,g:G.snaps[s].eq-o.snaps[s].eq,ch:(G.snaps[s].eq-G.snaps[s-1].eq)-(o.snaps[s].eq-o.snaps[s-1].eq)});
+    const turn=[...gaps].sort((a,b)=>Math.abs(b.ch)-Math.abs(a.ch))[0];
+    duel=`<h3 style="color:var(--red);letter-spacing:2px;text-transform:uppercase;font-size:12px">İkinizin karşılaştırması</h3>
+    <ul class="ins"><li>Maçı <b>${me.end>=os.end?'sen':esc(o.name)}</b> kazandı, fark <b>${fmt(Math.abs(me.end-os.end))}</b>.</li>
+    <li>Maçı en çok değiştiren çeyrek: ${yearOf(turn.s-1)} Ç${qOf(turn.s-1)} (${fmt(Math.abs(turn.ch))} fark açıldı, ${turn.ch>0?'sen':'o'} lehine). Sen: ${topPos(G.snaps[turn.s-1])}, ${esc(o.name)}: ${topPos(o.snaps[turn.s-1])}. Haber: ${news(turn.s-1)}</li></ul>
+    <table class="res"><tr><th>Çeyrek</th><th>Sen</th><th>${esc(o.name)}</th><th>Fark</th><th>Senin en büyüğün</th><th>Onun en büyüğü</th></tr>
+    ${gaps.map(g=>`<tr><td>${yearOf(g.s-1)} Ç${qOf(g.s-1)}</td><td>${fmt(G.snaps[g.s].eq)}</td><td>${fmt(o.snaps[g.s].eq)}</td><td class="${g.g>=0?'up':'dn'}">${fmt(g.g)}</td><td>${topPos(G.snaps[g.s-1])}</td><td>${topPos(o.snaps[g.s-1])}</td></tr>`).join('')}</table>`;
+  }
+  const era=ERAS.find(e=>e[0]===G.start);
+  $('endBody').innerHTML=`<div style="text-align:center"><span class="stamp">SONUÇ BELGESİ</span></div>
+  <h1 style="font-size:40px">${G.start}–${G.start+4} ·${era?era[1]:''}</h1>
+  <div class="sub">Bu dönemi şimdi tam olarak tanıdın</div>
+  <div class="cols2"><div>
+    <table class="res"><tr><th></th><th>Sen</th>${o?`<th>${esc(o.name)}</th>`:''}</tr>
+    ${row('Bitiş',`<b>${fmt(me.end)}</b>`,o?`<b>${fmt(os.end)}</b>`:'')}
+    ${row('Getiri',pct(me.end/10000-1),o?pct(os.end/10000-1):'')}
+    ${row('Reel getiri',pct(me.end/10000/infl-1),o?pct(os.end/10000/infl-1):'')}
+    ${row('S&P 500 kıyası',pct(bench/10000-1),pct(bench/10000-1))}
+    ${row('En büyük düşüş',pct(me.dd),o?pct(os.dd):'')}
+    ${row('Komisyon + vergi',fmt(me.fees),o?fmt(os.fees):'')}
+    ${row('İşlem sayısı',me.n,o?os.n:'')}</table>
+    <svg id="chart2" viewBox="0 0 300 120" style="width:100%;margin-top:10px;background:#fffdf5;border:1px solid var(--line)"></svg>
+    <div class="legend"><span><b style="background:#1f5a3f"></b>Sen</span>${o?'<span><b style="background:#b04a7a"></b>Rakip</span>':''}<span><b style="background:#999"></b>S&P 500</span></div>
+  </div><div><h3 style="color:var(--red);letter-spacing:2px;text-transform:uppercase;font-size:12px;margin-top:0">Analiz</h3><ul class="ins">${ins.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>
+  ${duel}
+  <div class="row" style="margin-top:14px"><button class="btn" id="again">Yeni dönem seç</button></div>`;
+  drawChart('chart2',G.eqHist,o?o.snaps.map(s=>s.eq):null);
+  $('again').onclick=toMenu;
+}
+
+/* ============ AĞ (PeerJS, 2 kişilik oda) ============ */
+function myState(){
+  const s=G.snaps[G.step]||snap();
+  return {t:'state',name:myName(),step:G.step,readyStep:G.readyStep,eq:s.eq,w:s.w,cash:s.cash,snaps:G.snaps,trades:G.trades.slice(-40),fees:G.fees+G.tax,done:G.done};
+}
+function sendState(){if(NET.on&&NET.conn&&NET.conn.open)NET.conn.send(myState())}
+function myName(){return ($('nick').value.trim()||'Oyuncu').slice(0,16)}
+function onMsg(m){
+  if(m.t==='hello'){ // host: misafir bağlandı
+    NET.oppName=m.name;
+    NET.conn.send({t:'init',start:PENDING.start,expert:PENDING.expert,name:myName()});
+    NET.on=true;startGameUI(PENDING.start,PENDING.expert);
+  }else if(m.t==='init'){ // misafir
+    NET.on=true;NET.oppName=m.name;
+    $('setup').classList.remove('on');
+    startGameUI(m.start,m.expert);
+  }else if(m.t==='state'){
+    NET.opp=m;
+    if(G){renderOpp();tryAdvance();if(G.done&&m.done&&m.snaps.length>=21&&$('end').classList.contains('hide'))showEnd();else if(!$('end').classList.contains('hide'))showEnd();render()}
+  }
+}
+function netSetup(conn){
+  NET.conn=conn;
+  conn.on('data',onMsg);
+  conn.on('close',()=>{toast('Arkadaşının bağlantısı koptu.')});
+  conn.on('error',()=>toast('Bağlantı hatası.'));
+}
+function hostRoom(start,expert){
+  PENDING={start,expert};
+  if(typeof Peer==='undefined'){toast('İnternet bağlantısı gerekli (PeerJS yüklenemedi).');return}
+  const tryCode=()=>{
+    const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*24)]).join('');
+    const peer=new Peer('gb-'+code);
+    peer.on('error',e=>{if(e.type==='unavailable-id')tryCode();else toast('Oda hatası: '+e.type)});
+    peer.on('open',()=>{NET.peer=peer;NET.code=code;NET.role='host';$('roomCode').textContent=code;$('roomInfo').classList.remove('hide')});
+    peer.on('connection',c=>{netSetup(c)});
+  };
+  tryCode();
+}
+function joinRoom(code){
+  if(typeof Peer==='undefined'){toast('İnternet bağlantısı gerekli (PeerJS yüklenemedi).');return}
+  code=code.trim().toUpperCase();if(code.length!==4){toast('4 harfli oda kodunu yaz.');return}
+  const peer=new Peer();NET.peer=peer;NET.role='guest';
+  peer.on('error',e=>toast(e.type==='peer-unavailable'?'Bu kodlu oda bulunamadı.':'Bağlantı hatası: '+e.type));
+  peer.on('open',()=>{
+    const c=peer.connect('gb-'+code,{reliable:true});
+    netSetup(c);
+    c.on('open',()=>{c.send({t:'hello',name:myName()});toast('Bağlandı, oyun başlıyor…')});
+  });
+}
+function leaveNet(){try{NET.conn&&NET.conn.close()}catch(e){}try{NET.peer&&NET.peer.destroy()}catch(e){}NET={on:false,role:null,conn:null,peer:null,opp:null,code:null}}
+
+/* ============ AKIŞ ============ */
+function startGameUI(start,expert){
+  newGame(start,expert);
+  $('setup').classList.remove('on');$('home').classList.add('hide');$('end').classList.add('hide');$('game').classList.remove('hide');
+  window.scrollTo(0,0);
+  render();sendState();
+}
+function toMenu(){leaveNet();G=null;PENDING=null;$('game').classList.add('hide');$('end').classList.add('hide');$('home').classList.remove('hide');$('roomInfo').classList.add('hide')}
+
+let selEra=null;
+function buildHome(){
+  $('eragrid').innerHTML=ERAS.map(e=>`<button class="era" data-y="${e[0]}"><span class="tag ${e[2]}">${{k:'KRİZ',b:'BOĞA',m:'KARIŞIK'}[e[2]]}</span><div class="y">${e[0]}</div><div class="t">${e[1]}</div><div class="d">${e[3]}</div></button>`).join('');
+  const items=[['S&P 500',.1],['Altın',.05],['Petrol',-.04],['Nasdaq',.12],['Nikkei',-.02],['Tahvil',.01],['Bitcoin',.2],['Nakit',0]];
+  const html=[...items,...items].map(([n,c])=>`<span>${n} <b class="${c>=0?'up':'dn'}">${c>=0?'▲':'▼'} ${Math.abs(c*100).toFixed(0)}%</b></span>`).join('');
+  $('tape').innerHTML=html;
+}
+document.addEventListener('click',ev=>{
+  const era=ev.target.closest('.era');
+  if(era){selEra=ERAS.find(e=>e[0]==era.dataset.y);$('sYear').textContent=selEra[0];$('sTitle').textContent=selEra[1];$('sDesc').textContent=selEra[3]+' Beş yıl (20 çeyrek) oynarsın. Başlangıçta sadece yılı bilirsin; sonuç, oynadıkça haberlerle ortaya çıkar.';$('roomInfo').classList.add('hide');$('setup').classList.add('on');return}
+  const b=ev.target.closest('.tb button');
+  if(b){const p=b.dataset.p;trade(b.dataset.a,p==='close'?'close':parseFloat(p))}
+});
+$('goClose').onclick=()=>{$('setup').classList.remove('on');leaveNet()};
+$('goSolo').onclick=()=>{LS.set('nick',myName());startGameUI(selEra[0],$('expert').checked)};
+$('goRoom').onclick=()=>{LS.set('nick',myName());leaveNet();hostRoom(selEra[0],$('expert').checked)};
+$('joinbtn').onclick=()=>{LS.set('nick',myName());joinRoom($('joincode').value)};
+$('nextBtn').onclick=onNext;
+$('menuBtn').onclick=()=>{if(confirm('Menüye dönersen bu oyun kaybolur. Emin misin?'))toMenu()};
+$('nick').value=LS.get('nick')||'';
+buildHome();
+</script>
+</body>
+</html>
